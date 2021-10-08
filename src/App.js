@@ -8,6 +8,7 @@ import Button from './components/Button';
 
 const App = () => {
   const [infoText, setInfoText] = useState('');
+  const [infoText2, setInfoText2] = useState('');
   const [errorText, setErrorText] = useState('');
   const [selectedInput, setSelectedInput] = useState({});
   const [selectedOutput, setSelectedOutput] = useState({});
@@ -30,15 +31,6 @@ const App = () => {
     getCurrencies();
     
   }, [])
-
-  // if (firstTimeLoading && inputCurrencies.length > 0 && outputCurrencies.length > 0) {
-  //   const request = conversionRequest;
-  //   request.baseCurrencySymbol = inputCurrencies[0].currencySymbol;
-  //   request.outputCurrencySymbol = outputCurrencies[0].currencySymbol;
-  //   setConversionRequest(request);
-  //   console.log(conversionRequest);
-  //   setFirstTimeLoading(false);
-  // }
   
   useEffect(() => {
     const setCurrencies = () => {
@@ -53,10 +45,13 @@ const App = () => {
 
   
   const fetchCurrencyDate = async () => {
+    try {
     const res = await fetch('http://localhost:8080/api/v1/currencies')
     const data = await res.json();
-    console.log("Called endpoint");
     return data.data;
+    } catch (err) {
+      setErrorText("Could not fetch currencies, Error conn to server")
+    }
   }
 
   const inputChange = (e) => {
@@ -104,19 +99,29 @@ const App = () => {
   }
 
   const postConversionRequest = async (req) => {
-    const res = await fetch('http://localhost:8080/api/v1/currency-converter/convert', {
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-      },
-      body: JSON.stringify(req),
-    })
+    try{
+      let time = performance.now();
+      const res = await fetch('http://localhost:8080/api/v1/currency-converter/convert', {
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+        },
+        body: JSON.stringify(req),
+      })
 
-    res.json()
-    .then((res) => {
-      setErrorText(res.message)
-      setInfoText(res.data.outputAmount)
-    }).catch((err) => setErrorText(err.message) )
+      res.json()
+      .then((res) => {
+        let requestTime = performance.now() - time;
+        if (res.code === 0) {
+          setInfoText(`Output Amount: ${res.data.outputAmount}`);
+          setInfoText2(`Calculation time: ${requestTime.toFixed(2)}ms`);
+        } else {
+          setErrorText(res.message)
+        }
+      }).catch((err) => setErrorText(err.message) )
+    } catch (err) {
+      setErrorText("An error occured while connecting to the server");
+    }
 
   }
 
@@ -124,8 +129,10 @@ const App = () => {
 
   return (
     <div className="wrapper">
-    <Header />
-    <TextInput text='Enter Amount' 
+    <Header text='Currency converter'/>
+    <Info text={'** Please choose, EUR as the base(From) currency as other currencies are currently restricted'}
+          textColor='red'/>
+    <TextInput text='Enter Input Amount' 
                 onChange={setInputAmount}/>
     <Drop items={allCurrencies}
           inputCurrencies={inputCurrencies}
@@ -135,7 +142,10 @@ const App = () => {
           selectedInputImage={`https://www.countryflags.io/${selectedInput.currencyCode}/flat/48.png`}
           selectedOutputImage={`https://www.countryflags.io/${selectedOutput.currencyCode}/flat/48.png`}
           />
-    <Info text={infoText}/>
+    <Info text={infoText}
+          textColor='black'/>
+    <Info text={infoText2}
+          textColor='black'/>
     <Info text={errorText} 
           textColor={'red'}/>
     <Button onClick={onSubmit} 
