@@ -6,6 +6,8 @@ import Drop from './components/Drop';
 import Info from './components/Info';
 import Button from './components/Button';
 
+const baseUrl = "https://currency-converter.kayodeoke.com"
+
 const App = () => {
   const [infoText, setInfoText] = useState('');
   const [infoText2, setInfoText2] = useState('');
@@ -46,7 +48,7 @@ const App = () => {
   
   const fetchCurrencyDate = async () => {
     try {
-    const res = await fetch('http://localhost:8080/api/v1/currencies')
+    const res = await fetch(`${baseUrl}/api/v1/currencies`)
     const data = await res.json();
     return data.data;
     } catch (err) {
@@ -101,7 +103,7 @@ const App = () => {
   const postConversionRequest = async (req) => {
     try{
       let time = performance.now();
-      const res = await fetch('http://localhost:8080/api/v1/currency-converter/convert', {
+      const res = await fetch(`${baseUrl}/api/v1/currency-converter/convert`, {
         method: 'POST',
         headers: {
           'Content-type': 'application/json',
